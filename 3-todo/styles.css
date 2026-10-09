@@ -118,6 +118,10 @@ body {
   color: #dc2626;
 }
 
+.completed {
+  text-decoration: line-through;
+}
+
 .footer-row {
   display: flex;
   align-items: center;

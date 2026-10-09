@@ -21,18 +21,26 @@ function renderProducts() {
   products.forEach((p) => {
     const card = document.createElement("div");
     card.className = "product";
+    card.dataset.cardId = p.id;
     card.innerHTML = `<h3>${p.name}</h3><p>${p.price} ₽</p>`;
     const btn = document.createElement("button");
+    btn.className = 'add-to-cart';
     btn.textContent = "В корзину";
-    btn.addEventListener("click", addToCart);
     card.appendChild(btn);
     productsEl.appendChild(card);
   });
 }
 
-function addToCart(id) {
-  const product = products.find((p) => p.id === id);
-  if (!product) {
+function addToCart(e) {
+  if (!e.target.closest('.add-to-cart')) {
+    return;
+  }
+  const productTarget = e.target.closest('.add-to-cart').parentElement;
+  const productId = Number(productTarget.dataset.cardId);
+  const product = products.find((p) => p.id === productId);
+  cartProdId = cart.map((prod) => prod.id);
+  if (cartProdId.includes(productId)) {
+    increaseQty(productId);
     return;
   }
   cart.push({ id: product.id, name: product.name, price: product.price, qty: 1 });
@@ -41,12 +49,15 @@ function addToCart(id) {
 
 function increaseQty(id) {
   const item = cart.find((i) => i.id === id);
-  item.qty;
+  item.qty += 1;
   renderCart();
 }
 
 function decreaseQty(id) {
   const item = cart.find((i) => i.id === id);
+  if (item.qty <= 1) {
+    return;
+  }
   item.qty--;
   renderCart();
 }
@@ -57,22 +68,21 @@ function removeItem(id) {
 }
 
 function applyPromo() {
-  if ((promoInput.value = "SALE10")) {
-    discount = 0.1;
-  }
+  discount = promoInput.value === "SALE10" ? 0.1 : 0;
   renderCart();
 }
 
 function clearCart() {
-  cart.splice(0, 1);
+  cart = [];
   renderCart();
 }
 
 function renderCart() {
   cartItemsEl.innerHTML = "";
-  let total = "";
+  let total = 0;
+  let ProdQtyCart = 0;
   cart.forEach((item) => {
-    const lineTotal = item.price;
+    const lineTotal = item.price * item.qty;
     const li = document.createElement("li");
     li.className = "cart-item";
     li.innerHTML = `<span>${item.name}</span>
@@ -85,18 +95,20 @@ function renderCart() {
     li.querySelector('[data-act="dec"]').addEventListener("click", () => decreaseQty(item.id));
     li.querySelector(".remove").addEventListener("click", () => removeItem(item.id));
     cartItemsEl.appendChild(li);
-    total += item.price * item.qty;
+    total += lineTotal;
+    ProdQtyCart += item.qty;
   });
 
   if (discount) {
     total = total - total * discount;
   }
 
-  badgeEl.textContent = cart.length;
+  badgeEl.textContent = ProdQtyCart;
   totalEl.textContent = total;
-  emptyMsg.hidden = true;
+  emptyMsg.hidden = cart.length !== 0;
 }
 
+productsEl.addEventListener("click", addToCart);
 promoBtn.addEventListener("click", applyPromo);
 clearBtn.addEventListener("click", clearCart);
 
